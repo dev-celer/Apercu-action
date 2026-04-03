@@ -1,0 +1,39 @@
+name: 'Apercu - PR Preview Lifecycle'
+description: 'Spin up/update preview database on open/update, and tear it down when the PR is closed'
+author: 'Celer'
+
+inputs:
+  debug:
+    description: 'Enable debug logs'
+    default: false
+
+outputs:
+  database_connections:
+    description: 'Connections fields for the preview databases in json format, use fromJSON() to access fields'
+
+runs:
+  using: 'composite'
+  steps:
+    - if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+      shell: bash
+      run: |
+        export PR_NUMBER=${{ github.event.pull_request.number }}
+        chmod +x ${{ github.action_path }}/apercu
+        if [[ ${{ inputs.debug }} == 'true' ]]; then
+          ${{ github.action_path }}/apercu -d cleanup
+        else
+          ${{ github.action_path }}/apercu cleanup
+        fi
+    - if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+      shell: bash
+      run: |
+        export PR_NUMBER=${{ github.event.pull_request.number }}
+        chmod +x ${{ github.action_path }}/apercu
+        if [[ ${{ inputs.debug }} == 'true' ]]; then
+          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j -d preview)
+        else
+          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j preview)
+        fi
+        echo $APERCU_OUTPUT | grep -v "DATABASE_CONNECTIONS" 
+        DATABASE_CONNECTIONS=$($APERCU_OUTPUT | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2)
+        echo "database_connections${DATABASE_CONNECTIONS}" >> $GITHUB_OUTPUT
