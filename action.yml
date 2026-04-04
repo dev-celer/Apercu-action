@@ -34,5 +34,5 @@ runs:
         else
           APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j preview)
         fi
-        DATABASE_CONNECTIONS=$($APERCU_OUTPUT | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2)
+        DATABASE_CONNECTIONS="$($APERCU_OUTPUT | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2)"
         echo "database_connections${DATABASE_CONNECTIONS}" >> $GITHUB_OUTPUT
