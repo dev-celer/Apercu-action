@@ -10,6 +10,7 @@ inputs:
 outputs:
   database_connections:
     description: 'Connections fields for the preview databases in json format, use fromJSON() to access fields'
+    value: ${{ steps.apercu_run.outputs.database_connections }}
 
 runs:
   using: 'composite'
@@ -25,6 +26,7 @@ runs:
           ${{ github.action_path }}/apercu cleanup
         fi
     - if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+      id: apercu_run
       shell: bash
       run: |
         export PR_NUMBER=${{ github.event.pull_request.number }}
@@ -34,5 +36,5 @@ runs:
         else
           APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j preview)
         fi
-        DATABASE_CONNECTIONS="$(echo "$APERCU_OUTPUT" | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2)"
+        DATABASE_CONNECTIONS="$(echo "$APERCU_OUTPUT" | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2-)"
         echo "database_connections=${DATABASE_CONNECTIONS}" >> $GITHUB_OUTPUT
