@@ -48,7 +48,7 @@ runs:
       run: |
         export PR_NUMBER=${{ github.event.pull_request.number }}
         chmod +x ${{ github.action_path }}/apercu
-        if [[ ${{ inputs.debug }} == 'true' ]]; then
+        if [[ "${{ inputs.debug }}" == 'true' ]]; then
           APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j -d -s .apercu-state.json preview)
         else
           APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j -s .apercu-state.json preview)
@@ -63,7 +63,7 @@ runs:
         if [ -f .apercu-state.json ]; then
           NEW_HASH="$(md5sum .apercu-state.json | cut -d " " -f 1)"
           if [[ "$NEW_HASH" != "${{ steps.state.outputs.hash }}" ]]; then
-            # State changed, updating ot creating comment
+            # State changed, updating or creating comment
             COMMENT_ID="${{ steps.state.outputs.comment }}"
 
             NEW_BODY=$(printf 'Apercu cache data, do not delete this comment\n<!-- apercu-state-data\n%s\n-->' "$(cat .apercu-state.json)")
