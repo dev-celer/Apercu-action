@@ -66,7 +66,7 @@ runs:
             # State changed, updating ot creating comment
             COMMENT_ID="${{ steps.state.outputs.comment }}"
 
-            NEW_BODY=$(printf '<!-- apercu-state-data\n%s\n-->' "$(cat .apercu-state.json)")
+            NEW_BODY=$(printf 'Apercu cache data, do not delete this comment\n<!-- apercu-state-data\n%s\n-->' "$(cat .apercu-state.json)")
 
             if [ -z "$COMMENT_ID" ]; then
               # Create comment
