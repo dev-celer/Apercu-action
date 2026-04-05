@@ -12,15 +12,14 @@ outputs:
     description: 'Connections fields for the preview databases in json format, use fromJSON() to access fields'
     value: ${{ steps.apercu_run.outputs.database_connections }}
 
-env:
-  GH_TOKEN: ${{ github.token }}
-
 runs:
   using: 'composite'
   steps:
     - if: ${{ github.event_name == 'pull_request' }}
       id: state
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         # Find github comment with apercu state data
         COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
@@ -58,6 +57,8 @@ runs:
         echo "database_connections=${DATABASE_CONNECTIONS}" >> $GITHUB_OUTPUT
     - if: ${{ github.event_name == 'pull_request' }}
       shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         if [ -f .apercu-state.json ]; then
           NEW_HASH="$(md5sum .apercu-state.json | cut -d " " -f 1)"
