@@ -12,6 +12,9 @@ outputs:
     description: 'Connections fields for the preview databases in json format, use fromJSON() to access fields'
     value: ${{ steps.apercu_run.outputs.database_connections }}
 
+env:
+  GH_TOKEN: ${{ github.token }}
+
 runs:
   using: 'composite'
   steps:
