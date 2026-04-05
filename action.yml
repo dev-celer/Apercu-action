@@ -25,7 +25,7 @@ runs:
         COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
                           --jq '[.[] | select(.body | contains("<!-- apercu-state-data")) | .id] | first')
         if [ -n "$COMMENT_ID" ]; then
-          COMMENT_BODY=$(gh api "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments/$COMMENT_ID" \
+          COMMENT_BODY=$(gh api "repos/${{ github.repository }}/issues/comments/$COMMENT_ID" \
                             --jq '.body')
 
           echo "$COMMENT_BODY" | sed -n '/<!-- apercu-state-data/,/-->/p' | sed '1d;$d' > .apercu-state.json
