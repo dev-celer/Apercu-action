@@ -1,19 +1,19 @@
-name: 'Apercu - PR Preview Lifecycle'
-description: 'Spin up/update preview database on open/update, and tear it down when the PR is closed'
-author: 'Celer'
+name: "Apercu - PR Preview Lifecycle"
+description: "Spin up/update preview database on open/update, and tear it down when the PR is closed"
+author: "Celer"
 
 inputs:
   debug:
-    description: 'Enable debug logs'
-    default: false
+    description: "Enable debug logs"
+    default: "false"
 
 outputs:
   database_connections:
-    description: 'Connections fields for the preview databases in json format, use fromJSON() to access fields'
+    description: "Connections fields for the preview databases in json format, use fromJSON() to access fields"
     value: ${{ steps.apercu_run.outputs.database_connections }}
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - if: ${{ github.event_name == 'pull_request' }}
       id: state
@@ -34,28 +34,33 @@ runs:
         fi
     - if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
       shell: bash
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
-        export PR_NUMBER=${{ github.event.pull_request.number }}
         chmod +x ${{ github.action_path }}/apercu
-        if [[ ${{ inputs.debug }} == 'true' ]]; then
+
+        if [[ "${{ inputs.debug }}" == 'true' ]]; then
           ${{ github.action_path }}/apercu -d -s .apercu-state.json cleanup
         else
           ${{ github.action_path }}/apercu -s .apercu-state.json cleanup
         fi
     - if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       id: apercu_run
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       shell: bash
       run: |
-        export PR_NUMBER=${{ github.event.pull_request.number }}
         chmod +x ${{ github.action_path }}/apercu
+
         if [[ "${{ inputs.debug }}" == 'true' ]]; then
-          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j -d -s .apercu-state.json preview)
+          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j --markdown-file .body.md -d -s .apercu-state.json preview)
         else
-          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j -s .apercu-state.json preview)
+          APERCU_OUTPUT=$(${{ github.action_path }}/apercu -j --markdown-file .body.md -s .apercu-state.json preview)
         fi
+
         DATABASE_CONNECTIONS="$(echo "$APERCU_OUTPUT" | grep "DATABASE_CONNECTIONS" | cut -d "=" -f 2-)"
         echo "database_connections=${DATABASE_CONNECTIONS}" >> $GITHUB_OUTPUT
-    - if: ${{ github.event_name == 'pull_request' }}
+    - if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
       shell: bash
       env:
         GH_TOKEN: ${{ github.token }}
@@ -78,3 +83,9 @@ runs:
             fi
           fi
         fi
+    - if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" --body "$(cat .body.md)"
